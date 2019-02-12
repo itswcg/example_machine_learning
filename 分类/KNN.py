@@ -14,6 +14,7 @@ KNN K近邻算法
 5.返回频率最高的类别作为预测分类
 """
 
+import os
 import operator
 from numpy import *
 import matplotlib
@@ -94,13 +95,56 @@ class Appointment:
         print('you will probably like this person {}'.format(resultList[classifierResult - 1]))
 
 
+class Discern:
+
+    def img2vector(self, filename):
+        """图像处理为向量"""
+        returnVect = zeros((1, 1024))
+        with open(filename, 'r') as f:
+            for i in range(32):
+                lineStr = f.readline()
+                for j in range(32):
+                    returnVect[0, 32 * i + j] = int(lineStr[j])
+            return returnVect
+
+    def handwriting(self):
+        hwLabels = []
+        trainingFileList = os.listdir('../dataset/KNN/trainingDigits')
+        m = len(trainingFileList)
+        trainingMat = zeros((m, 1024))
+        for i in range(m):
+            fileNameStr = trainingFileList[i]
+            fileStr = fileNameStr.split('.')[0]
+            classNumStr = int(fileStr.split('_')[0])
+            hwLabels.append(classNumStr)
+            trainingMat[i, :] = self.img2vector('../dataset/KNN/trainingDigits/{}'.format(fileNameStr))
+
+        testFileList = os.listdir('../dataset/KNN/testDigits')
+        errorCount = 0.0
+        mTest = len(testFileList)
+        for i in range(mTest):
+            fileNameStr = testFileList[i]
+            fileStr = fileNameStr.split('.')[0]
+            classNumStr = int(fileStr.split('_')[0])
+            vectorUnderTest = self.img2vector('../dataset/KNN/testDigits/{}'.format(fileNameStr))
+            classifierResult = classify0(vectorUnderTest, trainingMat, hwLabels, 3)
+            print('分类结果：{}， 真实结果：{}'.format(classifierResult, classNumStr))
+            if classifierResult != classNumStr:
+                errorCount += 1.0
+        print('总共出错:{}'.format(errorCount))
+        print('出错率:{}'.format(errorCount / float(mTest)))
+
+
 if __name__ == '__main__':
     # group, labels = create_dataset()
     # print(classify0([0, 1], group, labels, 3))
-    appoint = Appointment('../dataset/datingTestSet.txt')
-    datingDataMat, datingLables = appoint.file2matrix()
+
+    # appoint = Appointment('../dataset/KNN/datingTestSet.txt')
+    # datingDataMat, datingLables = appoint.file2matrix()
     # fig = plt.figure()
     # ax = fig.add_subplot(111)
     # ax.scatter(datingDataMat[:, 1], datingDataMat[:, 2], 15.0 * array(datingLables), 15.0 * array(datingLables))
     # plt.show()
-    print(appoint.autoNorm(datingDataMat))
+    # print(appoint.autoNorm(datingDataMat))
+    d = Discern()
+    d.handwriting()
