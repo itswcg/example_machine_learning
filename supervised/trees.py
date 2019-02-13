@@ -9,8 +9,11 @@
 决策树
 划分数据集的大原则：将无序的数据变得更加有序
 熵是信息的期望
+1.划分数据集，计算熵, 比较所有特征的信息增益(熵的减少)，返回最好特征划分的索引值
+2.递归建立树，直到程序遍历完所有划分的数据集，或每个分支下的实例都具有相同的分类
 """
 
+import operator
 from math import log
 
 
@@ -77,6 +80,33 @@ def chooseBestFeatureToSplit(dataSet):
             bestInfoGain = infoGain
             bestFeature = i
     return bestFeature
+
+
+def majorityCnt(classList):
+    classCount = {}
+    for vote in classList:
+        if vote not in classCount.keys(): classCount[vote] = 0
+        classCount[vote] += 1
+    sortedClassCount = sorted(classCount.items(), key=operator.itemgetter(1), reverse=True)
+    return sortedClassCount[0][0]
+
+
+def createTree(dataSet, labels):
+    classList = [_[-1] for _ in dataSet]
+    if classList.count(classList[0]) == len(classList):  # 递归约束
+        return classList[0]
+    if len(dataSet[0]) == 1:
+        return majorityCnt(classList)
+    bestFeat = chooseBestFeatureToSplit(dataSet)
+    bestfeatLabel = labels[bestFeat]
+    myTree = {bestfeatLabel: {}}
+    del labels[bestFeat]
+    featValues = [_[bestFeat] for _ in dataSet]
+    uniqueVals = set(featValues)
+    for value in uniqueVals:
+        subLabels = labels[:]
+        myTree[bestfeatLabel][value] = createTree(splitDataSet(dataSet, bestFeat, value), subLabels)
+    return myTree
 
 
 if __name__ == '__main__':
